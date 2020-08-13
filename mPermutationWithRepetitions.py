@@ -1,6 +1,6 @@
 from CombObject import CombObject
 
-class Combination(CombObject):
+class mPermutationWithRepetitions(CombObject):
 
     def __init__(self, object = None, variant = None, rank = None, n = None, m = None):
         super().__init__(object, variant, rank)
@@ -13,21 +13,22 @@ class Combination(CombObject):
 
     @staticmethod
     def _Cardinality(n, m):
-        return CombObject.Binomial(n, m)
+        if n == 0:
+            if m == 0:
+                return 1
+            else:
+                return 0
+        else:
+            return n**m
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
-            self.variant = self._ToVariant(self.object, self.n)
+            self.variant = self._ToVariant(self.object, self.n, self.m)
             return self.variant
 
-    def _ToVariant(self, a, n):
+    def _ToVariant(self, a, n, m):
         v = a.copy()
         v.reverse()
-        if 0 in v and 1 in v:
-            l = n - 1
-            while v[l] == v[l - 1]:
-               l -= 1
-            v = v[:l]
         return v
 
     def ToObject(self):
@@ -36,17 +37,8 @@ class Combination(CombObject):
             return self.object
 
     def _ToObject(self, v, n, m):
-        if m == n:
-            a = [1 for i in range(n)]
-        elif m == 0:
-            a = [0 for i in range(n)]
-        else:
-            a = v.copy()
-            if a[-1] == 0:
-                a.extend([1 for i in range(self.n - len(a))])
-            else:
-                a.extend([0 for i in range(self.n - len(a))])
-            a.reverse()
+        a = v.copy()
+        a.reverse()
         return a
 
     def Rank(self):
@@ -55,13 +47,10 @@ class Combination(CombObject):
             return self.rank
 
     def _Rank(self, v, n, m):
-        if m == 0 or m == n:
+        if n == 0 or m == 0:
             r = 0
         else:
-            if v[0] == 0:
-                r = self._Rank(v[1:], n - 1, m)
-            else:
-                r = self._Rank(v[1:], n - 1, m - 1) + self._Cardinality(n - 1, m)
+            r = v[0] - 1 + n * self._Rank(v[1:], n, m - 1)
         return r
 
     def Unrank(self):
@@ -70,11 +59,8 @@ class Combination(CombObject):
             return self.variant
 
     def _Unrank(self, r, n, m):
-        if m == 0 or m == n:
+        if n == 0 or m == 0:
             v = []
         else:
-            if r < self._Cardinality(n - 1, m):
-                v = [0] + self._Unrank(r, n - 1, m)
-            else:
-                v = [1] + self._Unrank(r - self._Cardinality(n - 1, m), n - 1, m - 1)
+            v = [r % n + 1] + self._Unrank(r // n, n, m - 1)
         return v

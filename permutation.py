@@ -1,4 +1,4 @@
-from combobject import CombObject
+from CombObject import CombObject
 
 class Permutation(CombObject):
 
@@ -6,13 +6,13 @@ class Permutation(CombObject):
         super().__init__(object, variant, rank)
         self.n = n
 
-    @staticmethod
-    def P_Cardinality(n):
-        return CombObject.Factorial(n)
-
     def Cardinality(self):
         if self.n is not None:
-            return self.P_Cardinality(self.n)
+            return self._Cardinality(self.n)
+
+    @staticmethod
+    def _Cardinality(n):
+        return CombObject.Factorial(n)
 
     def ToVariant(self):
         if (self.object and self.n) is not None:
@@ -61,20 +61,3 @@ class Permutation(CombObject):
         else:
             v = [r % n + 1] + self._Unrank(r // n, n - 1)
         return v
-
-"""
-a = Permutation(n = 4)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))
-"""
-
-

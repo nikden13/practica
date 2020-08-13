@@ -1,6 +1,6 @@
-from combobject import CombObject
-from combination import Combination
-from permutation import Permutation
+from CombObject import CombObject
+from Combination import Combination
+from Permutation import Permutation
 
 class mPermutation(CombObject):
 
@@ -9,16 +9,16 @@ class mPermutation(CombObject):
         self.n = n
         self.m = m
 
+    def Cardinality(self):
+        if (self.n and self.m) is not None:
+            return self._Cardinality(self.n, self.m)
+        
     @staticmethod
-    def mP_Cardinality(n, m):
+    def _Cardinality(n, m):
         if m > n:
             return 0
         else:
             return int(CombObject.Factorial(n) / CombObject.Factorial(n - m))
-
-    def Cardinality(self):
-        if (self.n and self.m) is not None:
-            return self.mP_Cardinality(self.n, self.m)
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
@@ -27,7 +27,7 @@ class mPermutation(CombObject):
 
     def _ToVariant(self, a, n, m):
         a1, a2, a3 = a.copy(), [], []
-        a1 = list(set(a1))
+        a1.sort()
         for i in range(m):
             s = 0
             for j in range(m):
@@ -62,7 +62,7 @@ class mPermutation(CombObject):
     def _Rank(self, v, n, m):
         l1 = Combination(variant = v[0], n = n, m = m).Rank()
         l2 = Permutation(variant = v[1], n = m).Rank()
-        return l1 + l2 * Combination.C_Cardinality(n, m)
+        return l1 + l2 * Combination._Cardinality(n, m)
 
     def Unrank(self):
         if (self.rank and self.n and self.m) is not None:
@@ -70,26 +70,8 @@ class mPermutation(CombObject):
             return self.variant
 
     def _Unrank(self, r, n, m):
-        l1 = r % Combination.C_Cardinality(n, m)
-        l2 = r // Combination.C_Cardinality(n, m)
+        l1 = r % Combination._Cardinality(n, m)
+        l2 = r // Combination._Cardinality(n, m)
         v1 = Combination(rank = l1, n = n, m = m).Unrank()
         v2 = Permutation(rank = l2, n = m).Unrank()
         return [v1, v2]
-
-"""
-a = mPermutation(n = 4, m = 2)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))
-"""
-
-
-

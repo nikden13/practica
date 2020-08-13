@@ -1,4 +1,4 @@
-from combobject import CombObject
+from CombObject import CombObject
 import math
 
 class RNA(CombObject):
@@ -8,18 +8,18 @@ class RNA(CombObject):
         self.n = n
         self.m = m
 
+    def Cardinality(self):
+        if (self.n and self.m) is not None:
+            return self._Cardinality(self.n, self.m)
+    
     @staticmethod
-    def RNA_Cardinality(n, m):
+    def _Cardinality(n, m):
         if m == 0:
             return 1
         elif m >= math.ceil(n / 2):
             return 0
         else:
             return int((1 / (n - m) * CombObject.Binomial(n - m, m) * CombObject.Binomial(n - m, m + 1)))
-
-    def Cardinality(self):
-        if (self.n and self.m) is not None:
-            return self.RNA_Cardinality(self.n, self.m)
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
@@ -82,10 +82,10 @@ class RNA(CombObject):
             s1, s2 = 0, 0
             for i in range(I):
                 for j in range(2 * i, n - 2 * (m - i)):
-                    s1 += self.RNA_Cardinality(n - 2 - j, m - 1 - i) * self.RNA_Cardinality(j, i)
+                    s1 += self._Cardinality(n - 2 - j, m - 1 - i) * self._Cardinality(j, i)
             for i in range(2 * I, J):
-                s2 += self.RNA_Cardinality(n - 2 - i, m - 1 - I) * self.RNA_Cardinality(i, I)
-            r = l1 + self.RNA_Cardinality(n - 2 - J, m - 1 - I) * l2 + self.RNA_Cardinality(n - 1, m) + s1 + s2
+                s2 += self._Cardinality(n - 2 - i, m - 1 - I) * self._Cardinality(i, I)
+            r = l1 + self._Cardinality(n - 2 - J, m - 1 - I) * l2 + self._Cardinality(n - 1, m) + s1 + s2
         return r
 
     def Unrank(self):
@@ -96,35 +96,22 @@ class RNA(CombObject):
     def _Unrank(self, r, n, m):
         if m == 0:
             v = []
-        elif r < self.RNA_Cardinality(n - 1, m):
+        elif r < self._Cardinality(n - 1, m):
             v = [0] + [self._Unrank(r, n - 1, m)]
         else:
-            r -= self.RNA_Cardinality(n - 1, m)
+            r -= self._Cardinality(n - 1, m)
             s, I, J = 0, 0, 0
-            while s + self.RNA_Cardinality(n - 2 - J, m - 1 - I) * self.RNA_Cardinality(J, I) <= r:
-                s += self.RNA_Cardinality(n - 2 - J, m - 1 - I) * self.RNA_Cardinality(J, I)
+            while s + self._Cardinality(n - 2 - J, m - 1 - I) * self._Cardinality(J, I) <= r:
+                s += self._Cardinality(n - 2 - J, m - 1 - I) * self._Cardinality(J, I)
                 if J <= n - 2 * (m - I) - 1:
                     J += 1
                 else:
                     I += 1
                     J = 2 * I
             r -= s
-            l1 = r % self.RNA_Cardinality(n - 2 - J, m - 1 - I)
-            l2 = r // self.RNA_Cardinality(n - 2 - J, m - 1 - I)
+            l1 = r % self._Cardinality(n - 2 - J, m - 1 - I)
+            l2 = r // self._Cardinality(n - 2 - J, m - 1 - I)
             vl = self._Unrank(l1, n - 2 - J, m - 1 - I)
             vr = self._Unrank(l2, J, I)
             v = [1, [I, J, vl, vr]]
         return v
-
-a = RNA(n = 7, m = 2)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))

@@ -1,45 +1,40 @@
-from combobject import CombObject
+from CombObject import CombObject
 
-class DyckPathWithReturnSteps(CombObject):
+class DyckPath(CombObject):
 
-    def __init__(self, object = None, variant = None, rank = None, n = None, m = None):
+    def __init__(self, object = None, variant = None, rank = None, n = None):
         super().__init__(object, variant, rank)
         self.n = n
-        self.m = m
-
-    @staticmethod
-    def DP_Cardinality(n, m):
-        if m == 0:
-            return 0
-        elif m == n:
-            return 1
-        else:
-            return int((m / n) * CombObject.Binomial(2 * n - m - 1, n - 1))
 
     def Cardinality(self):
-        if (self.n and self.m) is not None:
-            return self.DP_Cardinality(self.n, self.m)
+        if self.n is not None:
+            return self._Cardinality(self.n)
+
+    @staticmethod
+    def _Cardinality(n):
+        return int(CombObject.Binomial(2 * n, n) / (n + 1))
 
     def ToVariant(self):
-        if (self.object and self.n and self.m) is not None:
-            self.variant = self._ToVariant(self.object, self.n, self.m)
+        if (self.object and self.n) is not None:
+            self.variant = self._ToVariant(self.object, self.n, 0)
             return self.variant
 
     def _ToVariant(self, a, n, m):
-        v, l, k = [], 0, 0
-        for i in range(2 * n):
-            if l == 0:
-                l += 1
-            else:
-                if a[i] == -1:
-                    l -= 1
-                    v.append(0)
-                else:
-                    k += 1
-                    l += 1
-                    v.append(1)
-                if k == n - m:
-                    return v
+        v = []
+        if n == 0:
+            v = []
+        elif a[m] == -1:
+            v = [0]
+        else:
+            while a[m] == 1:
+                vv = self._ToVariant(a, n, m + 1)
+                v += vv
+                m += 2 * (vv[0] + 1)
+                if m >= 2 * n:
+                    break
+            if m < 2 * n:
+                v.insert(0, len(v))
+        return v
 
     def ToObject(self):
         if (self.variant and self.n) is not None:
@@ -47,66 +42,52 @@ class DyckPathWithReturnSteps(CombObject):
             return self.object
 
     def _ToObject(self, v, n):
-        l, k = 0, -1
-        a = [0 for i in range(2 * n)]
+        a = [0] * 2 * n
+        m = 0
         for i in range(2 * n):
-            if l == 0:
-                l += 1
+            if a[i] == 0:
                 a[i] = 1
-            else:
-                k += 1
-                if k > len(v) - 1:
-                    l -= 1
-                    a[i] = -1
-                elif v[k] == 0:
-                    l -= 1
-                    a[i] = -1
-                else:
-                    l += 1
-                    a[i] = 1
+                a[i + 1 + 2 * v[m]] = -1
+                m += 1
         return a
 
     def Rank(self):
-        if (self.variant and self.n and self.m) is not None:
-            self.rank = self._Rank(self.variant, self.n, self.m)
+        if (self.variant and self.n) is not None:
+            self.rank = self._Rank(self.variant, self.n)
             return self.rank
 
-    def _Rank(self, v, n, m):
-        if m == n:
+    def _Rank(self, v, n):
+        if n == 0:
             r = 0
         else:
-            if v[0] == 0:
-                r = self._Rank(v[1:], n - 1, m - 1)
-            else:
-                r = self._Rank(v[1:], n, m + 1) + self.DP_Cardinality(n - 1, m - 1)
+            m = v[0]
+            w = 0
+            for i in range(m):
+                w += self._Cardinality(i) * self._Cardinality(n - i - 1)
+            l1 = self._Rank(v[1:m + 1], m)
+            l2 = self._Rank(v[m + 1: n], n - m - 1)
+            r = w + l1 + self._Cardinality(m) * l2
         return r
 
     def Unrank(self):
-        if (self.rank and self.n and self.m) is not None:
-            self.variant = self._Unrank(self.rank, self.n, self.m)
+        if (self.rank and self.n) is not None:
+            self.variant = self._Unrank(self.rank, self.n)
             return self.variant
 
-    def _Unrank(self, r, n, m):
-        if m == n:
-            v = []
+    def _Unrank(self, r, n):
+        if n == 0:
+            return []
         else:
-            if r < self.DP_Cardinality(n - 1, m - 1):
-                v = [0] + self._Unrank(r, n - 1, m - 1)
-            else:
-                v = [1] + self._Unrank(r - self.DP_Cardinality(n - 1, m - 1), n, m + 1)
-        return v
-
-"""
-a = DyckPathWithReturnSteps(n = 5, m = 2)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))
-"""
+            s = 0
+            for i in range(n):
+                l1 = self._Cardinality(i)
+                l2 = self._Cardinality(n - i - 1)
+                w = l1 * l2
+                if s + w > r:
+                    l = r - s
+                    left = self._Unrank(l % l1 , i)
+                    right = self._Unrank(l // l1, n - i - 1)
+                    v = [i] + left + right
+                    return v
+                else:
+                    s += w

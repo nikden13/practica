@@ -1,4 +1,4 @@
-from combobject import CombObject
+from CombObject import CombObject
 
 class PermutationWithAscents(CombObject):
 
@@ -7,42 +7,12 @@ class PermutationWithAscents(CombObject):
         self.n = n
         self.m = m
 
-    @staticmethod
-    def _CountAscents(a):
-        k = 0
-        if len(a) > 1:
-            for i in range(len(a) - 1):
-                if a[i] < a[i + 1]:
-                    k += 1
-        return k
+    def Cardinality(self):
+        if (self.n and self.m) is not None:
+            return self._Cardinality(self.n, self.m)
 
     @staticmethod
-    def _AddAscent(n, k, v):
-        countD, i = 0, 0
-        if len(v) == 0:
-            v.insert(i, n)
-            return v
-        while countD != k + 1:
-            i += 1
-            if i == len(v):
-                countD = k + 1
-            elif v[i - 1] > v[i]:
-                countD += 1
-        v.insert(i, n)
-        return v
-
-    @staticmethod
-    def _AddDescent(n, k, v):
-        countA, i = 0, 0
-        while countA != k:
-            i += 1
-            if v[i - 1] < v[i]:
-                countA += 1
-        v.insert(i, n)
-        return v
-
-    @staticmethod
-    def PA_Cardinality(n, m):
+    def _Cardinality(n, m):
         if m == 0:
             return 1
         elif m == n:
@@ -52,10 +22,6 @@ class PermutationWithAscents(CombObject):
             for i in range(m + 1):
                 s += (-1)**i * CombObject.Binomial(n + 1, i) * (m + 1 - i)**n
             return s
-
-    def Cardinality(self):
-        if (self.n and self.m) is not None:
-            return self.PA_Cardinality(self.n, self.m)
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
@@ -79,8 +45,6 @@ class PermutationWithAscents(CombObject):
             else:
                 v += [1, p - k + 1]
                 vb += 1
-            if va == n - m - 1 or vb == m:
-                break
         return v
 
     def ToObject(self):
@@ -124,7 +88,7 @@ class PermutationWithAscents(CombObject):
             if v[0] == 0:
                 r = v[1] - 1 + (m + 1) * self._Rank(v[2:], n - 1, m)
             else:
-                r = v[1] - 1 + (n - m) * self._Rank(v[2:], n - 1, m - 1) + (m + 1) * self.PA_Cardinality(n - 1, m)
+                r = v[1] - 1 + (n - m) * self._Rank(v[2:], n - 1, m - 1) + (m + 1) * self._Cardinality(n - 1, m)
         return r
 
     def Unrank(self):
@@ -136,27 +100,47 @@ class PermutationWithAscents(CombObject):
         if m == 0 or m == n - 1:
             v = []
         else:
-            if r < (m + 1) * self.PA_Cardinality(n - 1, m):
+            if r < (m + 1) * self._Cardinality(n - 1, m):
                 p = r % (m + 1)
                 r //= (m + 1)
                 v = [0, p + 1] + self._Unrank(r, n - 1, m)
             else:
-                r -= (m + 1) * self.PA_Cardinality(n - 1, m)
+                r -= (m + 1) * self._Cardinality(n - 1, m)
                 p = r % (n - m)
                 r //= (n - m)
                 v = [1, p + 1] + self._Unrank(r, n - 1, m - 1)
         return v
-"""
-a = PermutationWithAscents(n = 4, m = 2)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))
-"""
+
+    @staticmethod
+    def _CountAscents(a):
+        k = 0
+        if len(a) > 1:
+            for i in range(len(a) - 1):
+                if a[i] < a[i + 1]:
+                    k += 1
+        return k
+
+    @staticmethod
+    def _AddAscent(n, k, v):
+        countD, i = 0, 0
+        if len(v) == 0:
+            v.insert(i, n)
+            return v
+        while countD != k + 1:
+            i += 1
+            if i == len(v):
+                countD = k + 1
+            elif v[i - 1] > v[i]:
+                countD += 1
+        v.insert(i, n)
+        return v
+
+    @staticmethod
+    def _AddDescent(n, k, v):
+        countA, i = 0, 0
+        while countA != k:
+            i += 1
+            if v[i - 1] < v[i]:
+                countA += 1
+        v.insert(i, n)
+        return v

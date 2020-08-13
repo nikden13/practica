@@ -1,15 +1,19 @@
-from combobject import CombObject
-from combination import Combination
-from dyckPath import DyckPathWithReturnSteps
-from permutation import Permutation
-from permutationWithAscents import PermutationWithAscents
+from CombObject import CombObject
+from Combination import Combination
+from DyckPathWithReturnSteps import DyckPathWithReturnSteps
+from Permutation import Permutation
+from PermutationWithAscents import PermutationWithAscents
 
-class EC(CombObject):
+class DyckPathWithAscentsOnReturnSteps(CombObject):
 
     def __init__(self, object = None, variant = None, rank = None, n = None, m = None):
         super().__init__(object, variant, rank)
         self.n = n
         self.m = m
+
+    def Cardinality(self):
+        if (self.n and self.m) is not None:
+            return self._Cardinality(self.n, self.m)
 
     @staticmethod
     def _Cardinality(n, m):
@@ -18,13 +22,8 @@ class EC(CombObject):
             s = 1
         else:
             for i in range(m + 1, n + 1):
-                s += DyckPathWithReturnSteps.DP_Cardinality(n, i) * Combination.C_Cardinality(n, i) \
-                     * PermutationWithAscents.PA_Cardinality(i, m) * Permutation.P_Cardinality(n - i)
+                s += DyckPathWithReturnSteps._Cardinality(n, i) * Combination._Cardinality(n, i) * PermutationWithAscents._Cardinality(i, m) * Permutation._Cardinality(n - i)
         return s
-
-    def Cardinality(self):
-        if (self.n and self.m) is not None:
-            return self._Cardinality(self.n, self.m)
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
@@ -32,6 +31,8 @@ class EC(CombObject):
             return self.variant
 
     def _ToVariant(self, a, n, m):
+        if n == 0:
+            return []
         ct_object, e_object, c_object, p_object = a[0], [], [], []
         a2, a21, a22, s = a[1], [], [], 0
         for i in range(2 * n):
@@ -74,6 +75,8 @@ class EC(CombObject):
             return self.object
 
     def _ToObject(self, v, n, m):
+        if n == 0:
+            return []
         a2, a21, a22, a23, a24, s = [], [], [], [], [], 0
         ct_object = DyckPathWithReturnSteps(variant = v[1], n = n, m = v[0]).ToObject()
         c_object = Combination(variant = v[2], n = n, m = v[0]).ToObject()
@@ -107,16 +110,16 @@ class EC(CombObject):
             return self.rank
 
     def _Rank(self, v, n, m):
+        if n == 0:
+            return 0
         l1 = DyckPathWithReturnSteps(variant = v[1], n = n, m = v[0]).Rank()
         l2 = Combination(variant = v[2], n = n, m = v[0]).Rank()
         l3 = PermutationWithAscents(variant = v[3], n = v[0], m = m).Rank()
         l4 = Permutation(variant = v[4], n = n - v[0]).Rank()
         r0 = 0
         for i in range(m + 1, v[0]):
-            r0 += DyckPathWithReturnSteps.DP_Cardinality(n, i) * Combination.C_Cardinality(n, i) \
-                  * PermutationWithAscents.PA_Cardinality(i, m) * Permutation.P_Cardinality(n - i)
-        return l1 + DyckPathWithReturnSteps.DP_Cardinality(n, v[0]) * (l2 + Combination.C_Cardinality(n, v[0])
-                                                  * (l3 + PermutationWithAscents.PA_Cardinality(v[0], m) * l4)) + r0
+            r0 += DyckPathWithReturnSteps._Cardinality(n, i) * Combination._Cardinality(n, i) * PermutationWithAscents._Cardinality(i, m) * Permutation._Cardinality(n - i)
+        return l1 + DyckPathWithReturnSteps._Cardinality(n, v[0]) * (l2 + Combination._Cardinality(n, v[0]) * (l3 + PermutationWithAscents._Cardinality(v[0], m) * l4)) + r0
 
     def Unrank(self):
         if (self.rank and self.n and self.m) is not None:
@@ -124,36 +127,21 @@ class EC(CombObject):
             return self.variant
 
     def _Unrank(self, r, n, m):
+        if n == 0:
+            return []
         k = m + 1
         s = 0
-        while s + DyckPathWithReturnSteps.DP_Cardinality(n, k) * Combination.C_Cardinality(n, k) \
-                * PermutationWithAscents.PA_Cardinality(k, m) * Permutation.P_Cardinality(n - k) <= r:
-            s += DyckPathWithReturnSteps.DP_Cardinality(n, k) * Combination.C_Cardinality(n, k) \
-                 * PermutationWithAscents.PA_Cardinality(k, m) * Permutation.P_Cardinality(n - k)
+        while s + DyckPathWithReturnSteps._Cardinality(n, k) * Combination._Cardinality(n, k) * PermutationWithAscents._Cardinality(k, m) * Permutation._Cardinality(n - k) <= r:
+            s += DyckPathWithReturnSteps._Cardinality(n, k) * Combination._Cardinality(n, k) * PermutationWithAscents._Cardinality(k, m) * Permutation._Cardinality(n - k)
             k += 1
         r -= s
-        dp = DyckPathWithReturnSteps.DP_Cardinality(n, k)
-        c = Combination.C_Cardinality(n, k)
-        pa = PermutationWithAscents.PA_Cardinality(k, m)
-        v1 = DyckPathWithReturnSteps(rank = r % dp, n = n, m = k)
-        r //= dp
+        ct = DyckPathWithReturnSteps._Cardinality(n, k)
+        c = Combination._Cardinality(n, k)
+        e = PermutationWithAscents._Cardinality(k, m)
+        v1 = DyckPathWithReturnSteps(rank = r % ct, n = n, m = k)
+        r //= ct
         v2 = Combination(rank = r % c, n = n, m = k)
         r //= c
-        v3 = PermutationWithAscents(rank = r % pa, n = k, m = m)
-        v4 = Permutation(rank = r // pa, n = n - k)
+        v3 = PermutationWithAscents(rank = r % e, n = k, m = m)
+        v4 = Permutation(rank = r // e, n = n - k)
         return [k, v1.Unrank(), v2.Unrank(), v3.Unrank(), v4.Unrank()]
-
-
-a = EC(n = 5, m = 3)
-print(a.Cardinality())
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))

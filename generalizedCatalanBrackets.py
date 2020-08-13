@@ -1,6 +1,6 @@
-from combobject import CombObject
-from dyckWord import DyckWord
-from mPermutation import mPermutation
+from CombObject import CombObject
+from DyckPath import DyckPath
+from mPermutationWithRepetitions import mPermutationWithRepetitions
 
 class GeneralizedCatalanBrackets(CombObject):
 
@@ -9,13 +9,13 @@ class GeneralizedCatalanBrackets(CombObject):
         self.n = n
         self.m = m
 
-    @staticmethod
-    def GCB_Cardinality(n, m):
-        return DyckWord.DW_Cardinality(n) * mPermutation.mP_Cardinality(m, n)
-
     def Cardinality(self):
         if (self.n and self.m) is not None:
-            return self.GCB_Cardinality(self.n, self.m)
+            return self._Cardinality(self.n, self.m)
+
+    @staticmethod
+    def _Cardinality(n, m):
+        return DyckPath._Cardinality(n) * mPermutationWithRepetitions._Cardinality(m, n)
 
     def ToVariant(self):
         if (self.object and self.n and self.m) is not None:
@@ -23,8 +23,8 @@ class GeneralizedCatalanBrackets(CombObject):
             return self.variant
 
     def _ToVariant(self, a, n, m):
-        v1 = DyckWord(object = a[0], n = n).ToVariant()
-        v2 = mPermutation(object = a[1], n = m, m = n).ToVariant()
+        v1 = DyckPath(object = a[0], n = n).ToVariant()
+        v2 = mPermutationWithRepetitions(object = a[1], n = m, m = n).ToVariant()
         return [v1, v2]
 
     def ToObject(self):
@@ -33,8 +33,8 @@ class GeneralizedCatalanBrackets(CombObject):
             return self.object
 
     def _ToObject(self, v, n, m):
-        a1 = DyckWord(variant = v[0], n = n).ToObject()
-        a2 = mPermutation(variant = v[1], n = m, m = n).ToObject()
+        a1 = DyckPath(variant = v[0], n = n).ToObject()
+        a2 = mPermutationWithRepetitions(variant = v[1], n = m, m = n).ToObject()
         return [a1, a2]
 
     def Rank(self):
@@ -43,9 +43,9 @@ class GeneralizedCatalanBrackets(CombObject):
             return self.rank
 
     def _Rank(self, v, n, m):
-        l1 = DyckWord(variant = v[0], n = n).Rank()
-        l2 = mPermutation(variant = v[1], n = m, m = n).Rank()
-        return l1 + l2 * DyckWord.DW_Cardinality(n)
+        l1 = DyckPath(variant = v[0], n = n).Rank()
+        l2 = mPermutationWithRepetitions(variant = v[1], n = m, m = n).Rank()
+        return l1 + l2 * DyckPath._Cardinality(n)
 
     def Unrank(self):
         if (self.rank and self.n and self.m) is not None:
@@ -53,27 +53,8 @@ class GeneralizedCatalanBrackets(CombObject):
             return self.variant
 
     def _Unrank(self, r, n, m):
-        l1 = r % DyckWord.DW_Cardinality(n)
-        l2 = r // DyckWord.DW_Cardinality(n)
-        v1 = DyckWord(rank = l1, n = n).Unrank()
-        v2 = mPermutation(rank = l2, n = m, m = n).Unrank()
+        l1 = r % DyckPath._Cardinality(n)
+        l2 = r // DyckPath._Cardinality(n)
+        v1 = DyckPath(rank = l1, n = n).Unrank()
+        v2 = mPermutationWithRepetitions(rank = l2, n = m, m = n).Unrank()
         return [v1, v2]
-
-
-a = GeneralizedCatalanBrackets(n = 2, m = 2)
-for r in range(a.Cardinality()):
-    a.rank = r
-    a.Unrank()
-    a.ToObject()
-    a.variant = None
-    a.rank = None
-    a.ToVariant()
-    a.Rank()
-    if r != a.rank:
-        print("error")
-    print(str(r + 1) + ') ' + str(a.__dict__))
-
-
-
-
-
