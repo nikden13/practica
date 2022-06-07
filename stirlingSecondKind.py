@@ -63,9 +63,7 @@ class StirlingSecondKind(CombObject):
 
     def needNextCheckObject(self, object):
         if len(object) == 1:
-            if (len(object[0]) < 3):
-                return False
-            return True
+            return False
         for item in object:
             if len(item) > 1:
                 return True
